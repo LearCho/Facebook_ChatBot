@@ -1,0 +1,149 @@
+metadata:
+  platformVersion: 1.0
+main: true
+name: CloudTestDriveBot_XX
+######### Intelligent Bots Workshop for the Oracle Summer School 2018 by Laban Ndwaru & Alexandru Medesan ########################### 
+context:
+  variables:
+    accountType: "AccountType"
+    iResult: "nlpresult"   
+    greeting: "string"
+    name: "string"
+    toAccount: "ToAccount"
+    paymentAmount: "CURRENCY"    
+
+states:
+
+
+############Intentions by the user ###############
+
+  intent:
+    component: "System.Intent"
+    properties:
+      variable: "iResult"
+      confidenceThreshold: 0.4
+    transitions:
+      actions:
+        Greetings: "startMenu"
+        Balances: "startBalances"
+        TransferMoney: "startPayments"
+        unresolvedIntent: "unresolved"
+    
+    
+ ############ Greetings ###############     
+  
+  startMenu:
+    component: "System.Output"
+    properties:
+       text: "Hello ${profile.firstName}, how may i help you?"
+    transitions: 
+       next: "intent"
+
+  
+ ############ Check Balances ############### 
+       
+  startBalances:
+    component: "System.SetVariable"
+    properties:
+      variable: "accountType"
+      value: "${iResult.value.entityMatches['AccountType'][0]}"
+    transitions: {}
+  askBalancesAccountType:
+    component: "System.List"
+    properties:
+      options: "${accountType.type.enumValues}"
+      prompt: "For which account do you want your balance?"
+      variable: "accountType"
+    transitions: {}
+  printBalance:
+    component: "System.Output"
+    properties:
+      text: "Balance for ${accountType.value} is $500"
+      keepTurn: true
+    transitions:
+     next: "anyOtherHelp"
+ 
+ ############ Transfer Money ############### 
+ 
+  startPayments:
+    component: "System.SetVariable"
+    properties:
+      variable: "accountType"
+      value: "${iResult.value.entityMatches['AccountType'][0]}"
+    transitions: {}
+  resolveToAccount:
+    component: "System.SetVariable"
+    properties:
+      variable: "toAccount"
+      value: "${iResult.value.entityMatches['ToAccount'][0]}"
+    transitions: {}
+  resolvePaymentAmount:
+    component: "System.SetVariable"
+    properties:
+      variable: "paymentAmount"
+      value: "${iResult.value.entityMatches['CURRENCY'][0]}"
+    transitions: {}
+  askFromAccountType:
+    component: "System.List"
+    properties:
+      options: "${accountType.type.enumValues}"
+      prompt: "From which account do you want to make a payment?"
+      variable: "accountType"
+    transitions: {}
+  askToAccount:
+    component: "System.List"
+    properties:
+      options: "${toAccount.type.enumValues}"
+      prompt: "To which account do you want to make a payment?"
+      variable: "toAccount"
+    transitions: {}
+  askPaymentAmount:
+    component: "System.Text"
+    properties:
+      prompt: "What's the payment amount?"
+      variable: "paymentAmount"
+    transitions: {}
+  doPayment:
+    component: "System.Output"
+    properties:
+      text: "${paymentAmount.value.totalCurrency} paid from ${accountType.value} to ${toAccount.value}"
+      keepTurn: true
+    transitions:
+      next: "anyOtherHelp"
+      
+##########Any other Help? or finish the dialog flow :) #######################
+
+  anyOtherHelp:
+    component: "System.List"
+    properties: 
+      prompt: "Do you need any other help?"
+      options: 
+      - label: "Yes"
+        value: "action1" 
+      - label: "No"
+        value: "action2" 
+    transitions:
+      actions:
+        action1: "startMenu"
+        action2: "done"      
+ 
+################## Finish the Flow ######################################  
+  done:
+    component: "System.Output"
+    properties:
+      text: "Thank you for reaching out to us!" 
+      translate:
+    transitions: 
+      return: "done"        
+      
+
+############ For errors resolutions ############### 
+      
+  unresolved:
+    component: "System.Output"
+    properties:
+      text: "I dont understand... please repeat."
+    transitions:
+      return: "unresolved"
+      
+      
